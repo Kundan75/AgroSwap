@@ -1,71 +1,72 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Users } from "../Data/Users";
-
+import {LoginService} from "../services/auth.services.js"
+import CustomButton from "../components/CustomButton";
+import { toast } from 'react-toastify';
 import {
   ShieldCheck,
   Lock,
-  Smartphone,
   Eye,
   EyeOff,
   Gavel,
   MapPin,
 } from "lucide-react";
 import {
-  Tabs,
-  Tab,
   TextField,
   Button,
   InputAdornment,
   IconButton,
-  Checkbox,
-  FormControlLabel,
-} from "@mui/material";
+  } from "@mui/material";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [emailOrMobile, setEmailOrMobile] = useState("");
   const [password, setPassword] = useState("");
 
-  const [role, setRole] = useState(0); // 0: Renter, 1: Lister
   const [showPass, setShowPass] = useState(false);
-  const [isOTP, setIsOTP] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const glassStyle =
     "bg-white/40 backdrop-blur-2xl border border-white/60 shadow-2xl rounded-[32px]";
 
-  const handleLogin = (e) => {
+  const handleLogin = async(e) => {
     e.preventDefault();
+    
 
     if (!emailOrMobile || !password) {
-      alert("Please enter mobile/email and password");
+      toast.error("Please enter mobile/email and password");
+      
       return;
     }
-
     setLoading(true);
+    try {
+    const formData = {
+      password,
+      ...(emailOrMobile.includes("@")
+        ? { email: emailOrMobile }
+        : { mobile: emailOrMobile }),
+    };
 
-    setTimeout(() => {
-      const user = Users.find(
-        (u) =>
-          u.role === (role === 0 ? "renter" : "lister") &&
-          (u.email === emailOrMobile || u.mobile === emailOrMobile) &&
-          u.password === password,
-      );
+    const data = await LoginService(formData);
+    if (data?.success &&data.user)
+              toast.success("Login Successfully")
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user._id));
 
-      if (!user) {
-        setLoading(false);
-        alert("Invalid credentials");
-        return;
-      }
+    navigate("/");
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
 
-      localStorage.setItem("agroUser", JSON.stringify(user));
-      setLoading(false);
-      navigate(user.role === "renter" ? "/renter" : "/lister");
-    }, 1500);
+  }
+  
   };
-
+  
+const isMobile = /^[6-9]\d{9}$/.test(emailOrMobile);
+const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailOrMobile);
+const showError = emailOrMobile !== "" && !isMobile && !isEmail;
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-100 flex items-center justify-center p-4 md:p-8 overflow-hidden relative font-sans">
       {/* Background Decor Blobs */}
@@ -105,11 +106,7 @@ const LoginPage = () => {
               title="Secure Payments"
               desc="Escrow Protected Transactions"
             />
-            <TrustPoint
-              icon={<ShieldCheck className="text-emerald-600" />}
-              title="Verified Farmers"
-              desc="100% KYC Verified Community"
-            />
+            
             <TrustPoint
               icon={<MapPin className="text-sky-600" />}
               title="Local Availability"
@@ -142,96 +139,71 @@ const LoginPage = () => {
 
           <form className="space-y-5" onSubmit={handleLogin}>
             <AnimatePresence mode="wait">
-              {!isOTP ? (
-                <motion.div
-                  key="password-login"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-4"
-                >
-                  <TextField
-                    fullWidth
-                    label="Mobile Number / Email"
-                    value={emailOrMobile}
-                    onChange={(e) => setEmailOrMobile(e.target.value)}
-                    variant="outlined"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "16px",
-                        backgroundColor: "rgba(255,255,255,0.5)",
-                      },
-                    }}
-                  />
+              <motion.div
+                key="password-login"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-4"
+              >
+                <TextField
+  fullWidth
+  label="Mobile Number / Email"
+  value={emailOrMobile}
+  onChange={(e) => {
+  const value = e.target.value;
 
-                  <ul></ul>
-                  <TextField
-                    fullWidth
-                    label="Password"
-                    type={showPass ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "16px",
-                        backgroundColor: "rgba(255,255,255,0.5)",
-                      },
-                    }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton onClick={() => setShowPass(!showPass)}>
-                            {showPass ? (
-                              <EyeOff size={20} />
-                            ) : (
-                              <Eye size={20} />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="otp-login"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-4"
-                >
-                  <TextField
-                    fullWidth
-                    label="Enter 6-digit OTP"
-                    placeholder="● ● ● ● ● ●"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "16px",
-                        backgroundColor: "rgba(255,255,255,0.5)",
-                      },
-                    }}
-                    inputProps={{
-                      className: "text-center tracking-[1em] font-black",
-                    }}
-                  />
-                  <div className="text-right">
-                    <button className="text-xs font-bold text-emerald-600">
-                      Resend OTP in 00:45
-                    </button>
-                  </div>
-                </motion.div>
-              )}
+  // If it's numeric input → treat as mobile
+  if (/^\d*$/.test(value)) {
+    if (value.length <= 10) {
+      setEmailOrMobile(value);
+    }
+  } else {
+    // Otherwise allow email typing
+    setEmailOrMobile(value);
+  }
+}}
+  variant="outlined"
+
+  error={showError}
+  helperText={showError ? "Enter valid email or mobile" : ""}
+
+  sx={{
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "16px",
+      backgroundColor: "rgba(255,255,255,0.5)",
+    },
+  }}
+/>
+                <ul></ul>
+
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "16px",
+                      backgroundColor: "rgba(255,255,255,0.5)",
+                    },
+                  }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPass(!showPass)}>
+                          {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </motion.div>
             </AnimatePresence>
 
             <div className="flex justify-between items-center">
-              <FormControlLabel
-                control={<Checkbox size="small" color="success" />}
-                label={
-                  <span className="text-xs font-bold text-slate-500">
-                    Remember me
-                  </span>
-                }
-              />
+            
               <button
                 type="button"
                 onClick={() => navigate("/forgot-password")}
@@ -242,22 +214,20 @@ const LoginPage = () => {
             </div>
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                fullWidth
-                variant="contained"
-                type="submit"
-                className={`py-4 rounded-2xl font-black text-lg transition-all shadow-lg ${loading ? "bg-slate-400" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200"}`}
-                disabled={loading}
-                sx={{
-                  borderRadius: "16px",
-                  textTransform: "none",
-                  py: 1.5,
-                  fontWeight: 900,
-                }}
-              >
-                {loading ? "Verifying..." : "Login & Continue"}
-              </Button>
-            </motion.div>
+  <CustomButton
+    fullWidth
+    type="submit"
+    variantType="success"
+    size="large"
+    disabled={loading}
+    loading={loading}
+    sx={{
+      fontWeight: 900,
+    }}
+  >
+    Login & Continue
+  </CustomButton>
+</motion.div>
           </form>
 
           <div className="relative my-8 flex items-center">
@@ -268,21 +238,7 @@ const LoginPage = () => {
             <div className="flex-grow border-t border-slate-200"></div>
           </div>
 
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={() => setIsOTP(!isOTP)}
-            className="py-3 rounded-2xl border-slate-200 text-slate-600 font-bold normal-case hover:bg-white/50"
-            startIcon={<Smartphone size={18} />}
-            sx={{
-              borderRadius: "16px",
-              textTransform: "none",
-              color: "#475569",
-              borderColor: "#e2e8f0",
-            }}
-          >
-            {isOTP ? "Login with Password" : "Login with OTP"}
-          </Button>
+          
 
           <div className="mt-8 text-center text-sm font-bold text-slate-500">
             New to AgroSwap?{" "}

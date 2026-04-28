@@ -4,6 +4,7 @@ import { Button } from "@mui/material";
 const CustomButton = ({
   children,
   onClick,
+  type = "button", 
   variantType = "primary",
   size = "medium",
   startIcon,
@@ -77,6 +78,7 @@ const CustomButton = ({
   return (
     <Button
       variant="contained"
+      type={type}
       onClick={onClick}
       startIcon={startIcon}
       endIcon={endIcon}
