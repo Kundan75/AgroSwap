@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import CustomButton from "../components/CustomButton";
+import { toast } from 'react-toastify';
 import {
   IconButton,
   Badge,
@@ -10,9 +11,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import {
-  Search,
   ShoppingCart,
-  Notifications,
   Menu as MenuIcon,
   Grass,
   Close,
@@ -20,19 +19,14 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  const user = JSON.parse(localStorage.getItem("agroUser"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const isLoggedIn = !!user;
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const toggleDrawer = (open) => () => setMobileOpen(open);
   const navigate = useNavigate();
 
-  const navLinks = [
-    "Home",
-    "Tool's Hub",
-    "Tool's Drop",
-    "About Us",
-  ];
+  const navLinks = ["Home", "Tool's Hub", "Tool's Drop", "About Us"];
 
   return (
     <div className="fixed top-4 w-full flex justify-center z-50 px-4">
@@ -63,7 +57,7 @@ const Navbar = () => {
               onClick={() => {
                 if (text === "Home") navigate("/");
                 if (text === "Tool's Hub") navigate("/tools");
-              if (text === "Tool's Drop") navigate("/my-dashboard");
+                if (text === "Tool's Drop") navigate("/my-dashboard");
                 if (text === "About Us") {
                   document
                     .getElementById("about")
@@ -87,37 +81,43 @@ const Navbar = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2 md:gap-4">
-         
-
-          <IconButton size="small" className="text-gray-600 hover:bg-green-50"
-           onClick={() => navigate("/history")}
+          <IconButton
+            size="small"
+            className="text-gray-600 hover:bg-green-50"
+            onClick={() => navigate("/history")}
           >
-            <Badge  color="success" overlap="circular">
+            <Badge color="success" overlap="circular">
               <ShoppingCart fontSize="small" />
-              
             </Badge>
-            
           </IconButton>
 
-          
           <div className="h-6 w-[1px] bg-gray-200 mx-2 hidden md:block" />
 
           {isLoggedIn ? (
             <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 rounded-xl text-sm font-bold
-                 bg-red-50 text-red-600 border border-red-200
-                 hover:bg-red-100 hover:shadow-lg hover:shadow-red-200
-                 transition-all"
-                onClick={() => {
-                  localStorage.removeItem("agroUser");
-                  navigate("/");
-                }}
-              >
-                Logout
-              </motion.button>
+              <CustomButton
+    variantType="outline"
+    size="small"
+    onClick={() => {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      toast.success("Successfully logged out");
+      navigate("/");
+    }}
+    sx={{
+      color: "#dc2626",
+      border: "1px solid #fecaca",
+       borderRadius: "999px",
+       px: 4,
+
+      "&:hover": {
+        background: "#fee2e2",
+        border: "1px solid #fca5a5",
+      },
+    }}
+  >
+    Logout
+  </CustomButton>
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-3">
@@ -127,22 +127,22 @@ const Navbar = () => {
               >
                 Login
               </button>
-               <CustomButton
+              <CustomButton
                 onClick={() => navigate("/signup")}
-                          variantType="success"
-                          size="small"
-                          sx={{
-                            borderRadius: "999px",
-                            px: 4,
-                          }}
-                        >
-                          Register
-                        </CustomButton>
+                variantType="success"
+                size="small"
+                sx={{
+                  borderRadius: "999px",
+                  px: 4,
+                }}
+              >
+                Register
+              </CustomButton>
             </div>
           )}
 
           {/* Mobile Toggle */}
-          <IconButton className="md:hidden" onClick={toggleDrawer(true)}>
+          <IconButton className="block md:hidden" onClick={toggleDrawer(true)}>
             <MenuIcon />
           </IconButton>
         </div>

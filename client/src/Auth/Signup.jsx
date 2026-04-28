@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import CustomButton from "../components/CustomButton";
+
+import { toast } from "react-toastify";
 import {
   Lock,
   Smartphone,
@@ -13,7 +16,6 @@ import {
   Mail,
   Key,
   Home,
-  Calendar,
   ArrowRight,
   Landmark,
   BadgeCheck,
@@ -33,8 +35,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-
-// Mock data for dropdowns
+import { SignupService } from "../services/auth.services";
 
 const INDIAN_STATES = [
   "Maharashtra",
@@ -57,14 +58,12 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    otp: "",
     village: "",
     district: "",
     state: "",
-    experience: "",
     agreeToTerms: false,
   });
-  const [otpTimer, setOtpTimer] = useState(60); // 60 seconds for OTP
+
   const [showSuccess, setShowSuccess] = useState(false);
 
   const glassStyle =
@@ -73,91 +72,67 @@ const Signup = () => {
   const handleChange = (e) => {
     const { name, value, checked, type } = e.target;
 
+    // 📱 Mobile input control
+    if (name === "mobile") {
+      // Allow only numbers and max 10 digits
+      if (!/^\d*$/.test(value)) return;
+      if (value.length > 10) return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
-
   const handleNext = () => {
     // Basic validation before moving to next step
     if (activeStep === 0) {
       if (
         !formData.fullName ||
         !formData.mobile ||
-        !formData.password ||
-        formData.password !== formData.confirmPassword
+        !formData.password
+        // formData.password !== formData.confirmPassword
       ) {
-        alert("Please fill all required fields and ensure passwords match.");
+       toast.error("Please fill all required fields and ensure passwords match.");
         return;
       }
-      // Simulate sending OTP
-      console.log("Sending OTP to:", formData.mobile);
-      startOtpTimer();
     }
     setActiveStep((prev) => prev + 1);
   };
 
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
-  };
-
-  const startOtpTimer = () => {
-    setOtpTimer(60);
-    const timer = setInterval(() => {
-      setOtpTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (activeStep === 2) {
+    // Step validation
+    if (activeStep === 1) {
       if (
         !formData.village ||
         !formData.district ||
         !formData.state ||
         !formData.agreeToTerms
       ) {
-        alert("Please fill all required profile info and agree to terms.");
+       toast.error("Please fill all required profile info and agree to terms.");
         return;
       }
-      if (role === 1 && !formData.experience) {
-        alert("Please fill all required Lister info.");
-        return;
+    }
+
+    try {
+      // 🔥 CALL YOUR SERVICE HERE
+      const data = await SignupService(formData);
+      console.log(data);
+      if (data?.success && data?.user) {
+        toast.success("Signup Successfully");
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate("/");
       }
 
-      // Get existing users or empty array
-      const existingUsers = JSON.parse(localStorage.getItem("agroUsers")) || [];
+      // 🎉 Success UI
+      // setShowSuccess(true);
+    } catch (error) {
+      console.error("Signup Error:", error);
 
-      const newUser = {
-        id: existingUsers.length + 1,
-        name: formData.fullName,
-        mobile: formData.mobile,
-        email: formData.email,
-        password: formData.password,
-        role: role === 0 ? "renter" : "lister",
-        location: `${formData.village}, ${formData.district}, ${formData.state}`,
-        kycStatus: "pending",
-        rating: 0,
-        experience: role === 1 ? formData.experience : null,
-        joinedAt: new Date().toISOString(),
-      };
-
-      // Save all users
-      const updatedUsers = [...existingUsers, newUser];
-      localStorage.setItem("agroUsers", JSON.stringify(updatedUsers));
-
-      // Auto login this user
-      localStorage.setItem("agroUser", JSON.stringify(newUser));
-
-      setShowSuccess(true);
+      toast.error(error?.response?.data?.message || "Something went wrong");
     }
   };
   const handlePhotoUpload = (e) => {
@@ -171,7 +146,7 @@ const Signup = () => {
     reader.readAsDataURL(file);
   };
 
-  const stepperLabels = ["Account", "Verify", "Profile"];
+  const stepperLabels = ["Account", "Profile"];
 
   if (showSuccess) {
     return (
@@ -201,11 +176,7 @@ const Signup = () => {
               variant="contained"
               className="bg-emerald-600 py-3 rounded-xl font-bold shadow-none"
               onClick={() => {
-                if (role === 0) {
-                  navigate("/renter");
-                } else {
-                  navigate("/lister");
-                }
+                navigate("/");
               }}
             >
               Go to Dashboard
@@ -215,6 +186,19 @@ const Signup = () => {
       </motion.div>
     );
   }
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1);
+  };
+  const isValidMobile = /^[6-9]\d{9}$/.test(formData.mobile);
+  const isValidEmail =
+    formData.email === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+
+  const showMobileError = formData.mobile !== "" && !isValidMobile;
+  const showEmailError = formData.email !== "" && !isValidEmail;
+
+  const showPasswordError =
+    formData.confirmPassword !== "" &&
+    formData.password !== formData.confirmPassword;
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-100 flex items-center justify-center p-4 md:p-8 overflow-hidden relative font-sans">
@@ -374,6 +358,12 @@ const Signup = () => {
                     name="mobile"
                     value={formData.mobile}
                     onChange={handleChange}
+                    error={showMobileError}
+                    helperText={
+                      showMobileError
+                        ? "Enter valid 10-digit mobile number"
+                        : ""
+                    }
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -395,6 +385,10 @@ const Signup = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
+                    error={showEmailError}
+                    helperText={
+                      showEmailError ? "Enter valid email address" : ""
+                    }
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -450,6 +444,10 @@ const Signup = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     type={showPass ? "text" : "password"}
+                    error={showPasswordError}
+                    helperText={
+                      showPasswordError ? "Passwords do not match" : ""
+                    }
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -469,93 +467,20 @@ const Signup = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Button
+                    <CustomButton
                       fullWidth
-                      variant="contained"
+                      variantType="success"
+                      size="large"
                       onClick={handleNext}
-                      className="py-3 rounded-2xl font-black text-lg transition-all shadow-lg bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200"
-                      sx={{
-                        borderRadius: "16px",
-                        textTransform: "none",
-                        fontWeight: 900,
-                      }}
                     >
-                      Continue <ArrowRight size={20} className="ml-2" />
-                    </Button>
+                      Continue <ArrowRight size={20} />
+                    </CustomButton>
                   </motion.div>
-                </motion.div>
-              )}
-
-              {/* Step 2: OTP Verification */}
-              {activeStep === 1 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-4 text-center"
-                >
-                  <p className="text-slate-600 font-medium">
-                    Enter 6-digit OTP sent to {formData.mobile}
-                  </p>
-                  <TextField
-                    fullWidth
-                    label="OTP"
-                    name="otp"
-                    value={formData.otp}
-                    onChange={handleChange}
-                    inputProps={{
-                      maxLength: 6,
-                      style: {
-                        textAlign: "center",
-                        letterSpacing: "1em",
-                        fontWeight: "bold",
-                      },
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "16px",
-                        backgroundColor: "rgba(255,255,255,0.5)",
-                      },
-                    }}
-                  />
-                  <div className="text-sm font-bold text-emerald-600">
-                    {otpTimer > 0 ? (
-                      `Resend OTP in 00:${otpTimer < 10 ? "0" : ""}${otpTimer}`
-                    ) : (
-                      <button onClick={startOtpTimer}>Resend OTP</button>
-                    )}
-                  </div>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      onClick={handleNext}
-                      className="py-3 rounded-2xl font-black text-lg transition-all shadow-lg bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200"
-                      sx={{
-                        borderRadius: "16px",
-                        textTransform: "none",
-                        fontWeight: 900,
-                      }}
-                    >
-                      Verify & Continue{" "}
-                      <ArrowRight size={20} className="ml-2" />
-                    </Button>
-                  </motion.div>
-                  <Button
-                    onClick={handleBack}
-                    className="text-slate-500 font-bold mt-2"
-                  >
-                    Back
-                  </Button>
                 </motion.div>
               )}
 
               {/* Step 3: Profile Info */}
-              {activeStep === 2 && (
+              {activeStep === 1 && (
                 <motion.div
                   key="step3"
                   initial={{ opacity: 0, x: 20 }}
@@ -636,41 +561,6 @@ const Signup = () => {
                     </Select>
                   </FormControl>
 
-                  {role === 1 && ( // Lister specific fields
-                    <AnimatePresence>
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="space-y-4 overflow-hidden"
-                      >
-                        <ul></ul>
-
-                        <TextField
-                          fullWidth
-                          label="Years of Experience"
-                          name="experience"
-                          value={formData.experience}
-                          onChange={handleChange}
-                          type="number"
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <Calendar size={20} />
-                              </InputAdornment>
-                            ),
-                          }}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              borderRadius: "16px",
-                              backgroundColor: "rgba(255,255,255,0.5)",
-                            },
-                          }}
-                        />
-                      </motion.div>
-                    </AnimatePresence>
-                  )}
-
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -694,24 +584,19 @@ const Signup = () => {
                     }
                   />
 
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button
+                  
+                    <CustomButton
                       fullWidth
-                      variant="contained"
                       type="submit"
-                      className="py-3 rounded-2xl font-black text-lg transition-all shadow-lg bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200"
+                      variantType="success"
+                      size="large"
                       sx={{
-                        borderRadius: "16px",
-                        textTransform: "none",
                         fontWeight: 900,
                       }}
                     >
                       Create Account <CheckCircle2 size={20} className="ml-2" />
-                    </Button>
-                  </motion.div>
+                    </CustomButton>
+                  
                   <Button
                     onClick={handleBack}
                     className="text-slate-500 font-bold mt-2"

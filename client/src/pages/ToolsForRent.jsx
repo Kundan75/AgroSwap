@@ -222,10 +222,10 @@ const filteredTools =
             ].map((item, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                 initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                 transition={{ duration: 0.6 }}
                 className="text-center"
               >
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/50 backdrop-blur-md flex items-center justify-center text-green-600 shadow-inner border border-white/40">
@@ -238,30 +238,7 @@ const filteredTools =
           </div>
         </section>
 
-        {/* 5. CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-        >
-          <GlassCard className="p-8 md:p-12 text-center bg-gradient-to-r from-green-600/20 to-sky-600/20 relative overflow-hidden">
-            <div className="relative z-10">
-              <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">List Your Tools & Earn More</h2>
-              <p className="text-slate-600 mb-8 max-w-xl mx-auto">Join hundreds of farmers turning their idle equipment into a steady stream of passive income.</p>
-              <Button 
-                variant="contained" 
-                size="large"
-                className="bg-slate-900 hover:bg-black text-white px-10 py-4 rounded-2xl normal-case text-lg font-bold"
-                endIcon={<ArrowRight />}
-              >
-                Go to Lister Dashboard
-              </Button>
-            </div>
-            {/* Abstract Shape for CTA */}
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-green-400/20 rounded-full blur-3xl" />
-          </GlassCard>
-        </motion.div>
-
+       
       </div>
     </div>
     
