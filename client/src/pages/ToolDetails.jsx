@@ -40,12 +40,10 @@ export default function ToolDetails() {
 const { id } = useParams();
 const [withInsurance, setWithInsurance] = useState(true);
 
-const [bookingType, setBookingType] = useState("day"); // day | hour | acre
+const [bookingType] = useState("day"); // fixed to day only
 const [fromDate, setFromDate] = useState("");
 const [toDate, setToDate] = useState("");
-const [fromTime, setFromTime] = useState("");
-const [toTime, setToTime] = useState("");
-const [acres, setAcres] = useState("");
+
 
 const handleConfirmBooking = () => {
   if (!fromDate) return alert("Select booking date");
@@ -53,21 +51,13 @@ const handleConfirmBooking = () => {
   if (bookingType === "day" && !toDate)
     return alert("Select end date");
 
-  if (bookingType === "hour" && (!fromTime || !toTime))
-    return alert("Select time slot");
-
-  if (bookingType === "acre" && (!toDate || !acres))
-    return alert("Select date range and acres");
-
-  navigate(`/payment/${tool.id}`, {
+  
+ navigate(`/payment/${tool.id}`, {
   state: {
     tool,
     bookingType,
     fromDate,
     toDate,
-    fromTime,
-    toTime,
-    acres,
     withInsurance
   }
 });
@@ -113,7 +103,7 @@ if (!tool) return <div>Loading...</div>;
               className="relative rounded-[3rem] overflow-hidden group shadow-2xl h-[400px] md:h-[500px]"
             >
               <img 
-  src={tool?.img} 
+  src={tool?.image} 
   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
   alt={tool?.name}
 />
@@ -168,7 +158,7 @@ if (!tool) return <div>Loading...</div>;
   </div>
 
   <p className="mt-3 text-xs font-medium text-slate-500 flex items-center gap-1">
-    📍 {tool.location.address}
+    📍 {tool.location}
   </p>
 </GlassCard>
  </div>
@@ -183,7 +173,7 @@ if (!tool) return <div>Loading...</div>;
 
               </h1>
               <p className="flex items-center gap-2 text-slate-500 font-medium mb-6">
-                <MapPin size={18} className="text-emerald-500" /> {tool?.location?.address} <br></br> {tool?.status}
+                <MapPin size={18} className="text-emerald-500" /> {tool?.location} <br></br> {tool?.status}
               </p>
 
               <GlassCard className="p-8 relative overflow-hidden border-emerald-200/60">
@@ -200,7 +190,6 @@ if (!tool) return <div>Loading...</div>;
         <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">Starting Price</p>
         <h2 className="text-4xl font-black text-slate-900">
           ₹{tool?.price}
-          <span className="text-lg text-slate-500 font-bold"> / {tool?.unit}</span>
         </h2>
       </div>
       <div className="text-right">
@@ -210,72 +199,24 @@ if (!tool) return <div>Loading...</div>;
     </div>
 
     {/* Booking Type Selector */}
-    <div className="flex bg-white/60 p-1 rounded-2xl shadow-inner">
-      {["day", "hour", "acre"].map(type => (
-        <button
-          key={type}
-          onClick={() => setBookingType(type)}
-          className={`flex-1 py-2 rounded-xl text-sm font-black transition-all ${
-            bookingType === type
-              ? "bg-green-600 text-white shadow-md"
-              : "text-slate-500 hover:bg-white/80"
-          }`}
-        >
-          {type === "day" && "By Day"}
-          {type === "hour" && "By Hour"}
-          {type === "acre" && "By Acre"}
-        </button>
-      ))}
-    </div>
+    
 
     {/* Date / Time / Acre Inputs */}
     <div className="grid grid-cols-2 gap-4">
-      <TextField
-        type="date"
-       
-        value={fromDate}
-        onChange={(e) => setFromDate(e.target.value)}
-        fullWidth
-      />
+  <TextField
+    type="date"
+    value={fromDate}
+    onChange={(e) => setFromDate(e.target.value)}
+    fullWidth
+  />
 
-      {bookingType !== "hour" && (
-        <TextField
-          type="date"
-          
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          fullWidth
-        />
-      )}
-
-      {bookingType === "hour" && (
-        <>
-          <TextField
-            type="time"
-            
-            value={fromTime}
-            onChange={(e) => setFromTime(e.target.value)}
-          />
-          <TextField
-            type="time"
-            
-            value={toTime}
-            onChange={(e) => setToTime(e.target.value)}
-          />
-        </>
-      )}
-
-      {bookingType === "acre" && (
-        <TextField
-          type="number"
-          label="Area (Acres)"
-          value={acres}
-          onChange={(e) => setAcres(e.target.value)}
-          fullWidth
-        />
-      )}
-    </div>
-
+  <TextField
+    type="date"
+    value={toDate}
+    onChange={(e) => setToDate(e.target.value)}
+    fullWidth
+  />
+</div>
     {/* Insurance Toggle */}
     <div className="flex items-center justify-between p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200">
       <div className="flex items-center gap-2">
@@ -328,10 +269,9 @@ if (!tool) return <div>Loading...</div>;
               <div className="p-8">
                 {tabValue === 0 && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <InfoPill icon={<Zap size={18} />} label="Power" value={tool?.hp}/>
-                    <InfoPill icon={<Fuel size={18} />} label="Fuel Type" value={tool?.fuelType}/>
-                    <InfoPill icon={<Settings size={18} />} label="Drive" value={tool?.drive} />
-                    <InfoPill icon={<Clock size={18} />} label="Year" value={tool?.year} />
+                    <InfoPill icon={<Zap size={18} />} label="Power" value={tool?.power|| "N/A"}/>
+                    <InfoPill icon={<Fuel size={18} />} label="Fuel Type" value={tool?.fuel|| "N/A"}/>
+                    <InfoPill icon={<Settings size={18} />} label="Drive" value={tool?.drive|| "N/A"} />
                     <div className="col-span-full pt-6">
                       <h4 className="font-bold text-slate-800 mb-2">Description</h4>
                       <p className="text-slate-600 leading-relaxed">

@@ -214,7 +214,7 @@ export default function MyTools() {
                   {/* Tool Image */}
                   <div className="h-52 relative overflow-hidden">
                     <img
-                      src={tool.img}
+                      src={tool.image}
                       alt={tool.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />

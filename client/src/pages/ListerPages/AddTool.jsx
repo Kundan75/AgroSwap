@@ -2,23 +2,18 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/GlassCard";
-
-
+import CustomButton from "../../components/CustomButton";
 
 import {
-  Plus,
   Tractor,
   MapPin,
   Calendar,
-  IndianRupee,
   Zap,
   Fuel,
   Settings,
   Image as ImageIcon,
   Info,
   CheckCircle2,
-  X,
-  ChevronRight,
   UploadCloud,
 } from "lucide-react";
 import {
@@ -30,30 +25,25 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  Button,
-  IconButton,
   InputAdornment,
   Chip,
 } from "@mui/material";
+import { CreateToolService } from "../../services/tool.services";
 
 // --- Shared Glass Component ---
 
-
 export default function AddTool() {
   const navigate = useNavigate();
-
+  const [imageFile, setImageFile] = useState(null);
   // --- Form State ---
   const [formData, setFormData] = useState({
     name: "",
     category: "",
     price: "",
-    unit: "per hour",
     power: "",
-    fuel: "Diesel",
-    drive: "4WD",
-    year: "2024",
+    fuel: "",
+    drive: "",
     location: "",
-    availableFrom: "",
     description: "",
     image: null,
   });
@@ -67,24 +57,61 @@ export default function AddTool() {
   };
 
   const handleImageUpload = (e) => {
-    if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file); // 🔥 store real file
       setFormData((prev) => ({
         ...prev,
-        image: URL.createObjectURL(e.target.files[0]),
+        image: URL.createObjectURL(file), // preview only
       }));
     }
   };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("🚀 Submitting Tool to AgroSwap DB:", formData);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 4000);
+
+    try {
+      // 🔍 basic validation
+      if (
+        !formData.name ||
+        !formData.category ||
+        !formData.price ||
+        !formData.location
+      ) {
+        return;
+      }
+
+      const formDataToSend = new FormData();
+
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("power", formData.power);
+      formDataToSend.append("fuel", formData.fuel);
+      formDataToSend.append("drive", formData.drive);
+      formDataToSend.append("location", formData.location);
+      formDataToSend.append("description", formData.description);
+
+      if (imageFile) {
+        formDataToSend.append("image", imageFile); // 🔥 actual upload
+      }
+      for (let pair of formDataToSend.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      const res = await CreateToolService(formDataToSend);
+
+      if (res?.success) {
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 4000);
+        navigate("/my-dashboard");
+      }
+    } catch (error) {
+      console.error("CreateTool Error:", error);
+    }
   };
 
   return (
     <>
-     
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-sky-50 to-white pt-24 pb-20 px-4 md:px-10 overflow-hidden relative">
         {/* Background Decor */}
         <div className="fixed inset-0 pointer-events-none">
@@ -152,6 +179,7 @@ export default function AddTool() {
                         "Tiller",
                         "Seeder",
                         "Baler",
+                        "Trailer",
                       ].map((cat) => (
                         <MenuItem key={cat} value={cat}>
                           {cat}
@@ -160,36 +188,20 @@ export default function AddTool() {
                     </Select>
                   </FormControl>
 
-                  <div className="flex gap-2">
-                    <TextField
-                      fullWidth
-                      label="Price"
-                      name="price"
-                      type="number"
-                      value={formData.price}
-                      onChange={handleChange}
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">₹</InputAdornment>
-                        ),
-                      }}
-                    />
-                    <FormControl className="min-w-[120px]">
-                      <Select
-                        name="unit"
-                        value={formData.unit}
-                        onChange={handleChange}
-                      >
-                        {["per hour", "per day", "per acre"].map((u) => (
-                          <MenuItem key={u} value={u}>
-                            {u}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </div>
-
+                  <TextField
+                    fullWidth
+                    label="Price per Day"
+                    name="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={handleChange}
+                    required
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">₹</InputAdornment>
+                      ),
+                    }}
+                  />
                   {/* Technical Specs */}
                   {/* --- Technical Specs Section (Conditional) --- */}
                   <AnimatePresence>
@@ -270,24 +282,6 @@ export default function AddTool() {
                     )}
                   </AnimatePresence>
 
-                  <TextField
-                    fullWidth
-                    label="Year of Purchase"
-                    name="year"
-                    type="number"
-                    value={formData.year}
-                    onChange={handleChange}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Available From"
-                    name="availableFrom"
-                    type="date"
-                    value={formData.availableFrom}
-                    onChange={handleChange}
-                    InputLabelProps={{ shrink: true }}
-                  />
-
                   <div className="col-span-full">
                     <TextField
                       fullWidth
@@ -322,16 +316,35 @@ export default function AddTool() {
                   <div className="col-span-full">
                     <label className="block w-full cursor-pointer">
                       <div className="border-2 border-dashed border-emerald-300/50 bg-emerald-50/30 rounded-[2rem] p-10 flex flex-col items-center justify-center hover:bg-emerald-50/50 transition-all">
-                        <UploadCloud
-                          size={40}
-                          className="text-emerald-500 mb-2"
-                        />
-                        <p className="font-bold text-slate-700">
-                          Upload Tool Photos
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          PNG, JPG up to 10MB
-                        </p>
+                        {formData.image ? (
+                          <>
+                            <img
+                              src={formData.image}
+                              alt="preview"
+                              className="w-40 h-40 object-cover rounded-xl mb-3"
+                            />
+                            <p className="text-green-600 font-bold">
+                              Image Selected ✅
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Click to change image
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud
+                              size={40}
+                              className="text-emerald-500 mb-2"
+                            />
+                            <p className="font-bold text-slate-700">
+                              Upload Tool Photos
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              PNG, JPG up to 10MB
+                            </p>
+                          </>
+                        )}
+
                         <input
                           type="file"
                           className="hidden"
@@ -344,13 +357,12 @@ export default function AddTool() {
                 </div>
 
                 <div className="mt-10 flex justify-end">
-                  <Button
+                  <button
                     type="submit"
-                    variant="contained"
-                    className="bg-gradient-to-r from-emerald-600 to-sky-600 px-12 py-4 rounded-2xl text-lg font-black normal-case shadow-xl shadow-emerald-200"
+                    className="bg-gradient-to-r from-emerald-600 to-sky-600 px-8 py-3 rounded-full text-white font-semibold shadow-lg hover:scale-105 transition-all duration-200"
                   >
                     Submit Listing
-                  </Button>
+                  </button>
                 </div>
               </GlassCard>
             </div>

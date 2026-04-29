@@ -1,17 +1,39 @@
-import React from "react";
+import { useEffect,useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { TOOLS } from "../Data/Tools";
+import { useNavigate, } from "react-router-dom";
 import { Plus } from "lucide-react";
 import CustomButton from "../components/CustomButton";
 import { Search, Psychology } from "@mui/icons-material";
-import { Button, TextField, InputAdornment } from "@mui/material";
+import { TextField, InputAdornment } from "@mui/material";
+import { getAllTools } from "../services/tool.services";
+
 const Home = () => {
   const navigate = useNavigate();
+  const [tools, setTools] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const randomTools = [...tools]
+  .sort(() => Math.random() - 0.5)
+  .slice(0, 4);
+
+  useEffect(() => {
+    const fetchTools = async () => {
+      try {
+        const res = await getAllTools();
+        setTools(res);
+      } catch (error) {
+        console.error("Failed to fetch tools:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTools();
+  }, []);
   /* -------- SAFE USER -------- */
   let user = null;
   try {
-    user = JSON.parse(localStorage.getItem("agroUser"));
+    user = JSON.parse(localStorage.getItem("user"));
   } catch {
     user = null;
   }
@@ -22,13 +44,13 @@ const Home = () => {
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-200/40 rounded-full blur-[120px]" />
         <div className="absolute bottom-[10%] right-[-5%] w-[400px] h-[400px] bg-sky-200/30 rounded-full blur-[100px]" />
       </div>
-      
+
       <main className="relative z-10 container mx-auto px-6">
         {/* HERO */}
         <section className="py-5 text-center">
           {user && (
             <p className="mb-4 text-slate-600 font-medium">
-              Welcome back, {user.name} 👋
+              Welcome back, {user.fullName} 👋
             </p>
           )}
 
@@ -98,8 +120,7 @@ const Home = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {TOOLS.filter((t) => t.status !== "Booked")
-              .slice(0, 4)
+            {randomTools
               .map((tool) => (
                 <motion.div
                   key={tool.id}
@@ -110,7 +131,7 @@ const Home = () => {
                   }
                 >
                   <img
-                    src={tool.img}
+                    src={tool.image}
                     alt={tool.name}
                     className="w-full h-40 object-cover rounded-xl mb-3"
                   />
@@ -119,20 +140,21 @@ const Home = () => {
                     <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">
                       Available
                     </span>
-                    <span className="text-xs text-amber-500 font-bold">
-                      ⭐ 4.5
-                    </span>
                   </div>
 
                   <h3 className="font-bold text-slate-800">{tool.name}</h3>
 
                   <p className="text-sm text-slate-500 mb-2">
-                    {tool.location?.address || "Nearby"}
+                    At {tool.location|| "Nearby"}
+                  </p>
+
+                  <p className="text-sm text-slate-500 mb-2">
+                    Owned by {tool.owner.fullName|| "Nearby"}
                   </p>
 
                   <div className="flex justify-between items-center">
                     <span className="text-emerald-600 font-bold">
-                      ₹{tool.price}/{tool.unit}
+                      ₹{tool.price} Per Day
                     </span>
 
                     <CustomButton
