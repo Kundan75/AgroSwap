@@ -198,7 +198,7 @@ const [tools, setTools] = useState([]);
                         </div>
 
                         <div className="flex flex-wrap gap-3">
-                          <Badge icon={Zap} label={`${tool.hp} HP`} />
+                          <Badge icon={Zap} label={`${tool.power} HP`} />
                           <Badge icon={Fuel} label={tool.fuel} />
                           <Badge icon={Settings} label={tool.drive} />
                         </div>
