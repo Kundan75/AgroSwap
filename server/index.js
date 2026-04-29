@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js"; // ✅ correct path + extension
+import toolRoutes from "./routes/toolRoutes.js"
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ const PORT = process.env.PORT || 5000;
 
 // Routes
 app.use("/auth", authRoutes);
+app.use("/tool", toolRoutes);
+
 
 // Test Route
 app.get("/", (req, res) => {

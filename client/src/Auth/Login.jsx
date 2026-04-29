@@ -52,7 +52,7 @@ const LoginPage = () => {
     if (data?.success &&data.user)
               toast.success("Login Successfully")
     localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user._id));
+    localStorage.setItem("user", JSON.stringify(data.user));
 
     navigate("/");
   } catch (error) {

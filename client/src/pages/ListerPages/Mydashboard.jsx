@@ -2,6 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomButton from "../../components/CustomButton";
+import { useEffect, useState } from "react";
+import { getUserTools } from "../../services/tool.services";
 import {
   Plus,
   Zap,
@@ -33,50 +35,33 @@ const Badge = ({ icon: Icon, label }) => (
   </div>
 );
 
-// --- Dummy Data ---
 
-const DUMMY_TOOLS = [
-  {
-    id: 1,
-    name: "John Deere 5050D",
-    category: "Tractor",
-    price: "800",
-    unit: "day",
-    hp: "50",
-    fuel: "Diesel",
-    drive: "4WD",
-    img: "https://images.unsplash.com/photo-1594495894542-a4e1707d7e7c?auto=format&fit=crop&q=80&w=600",
-  },
-  {
-    id: 2,
-    name: "Mahindra Rice Harvester",
-    category: "Harvester",
-    price: "2500",
-    unit: "day",
-    hp: "60",
-    fuel: "Diesel",
-    drive: "2WD",
-    img: "https://images.unsplash.com/photo-1592910129881-892bbe239cc6?auto=format&fit=crop&q=80&w=600",
-  },
-  {
-    id: 3,
-    name: "DJI Agras T40 Drone",
-    category: "Drone",
-    price: "1200",
-    unit: "day",
-    hp: "15",
-    fuel: "Electric",
-    drive: "N/A",
-    img: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=600",
-  },
-];
+// const [loading, setLoading] = useState(true);
+
 
 // --- Main Section Component ---
 
 export default function ListerInventory() {
+const [tools, setTools] = useState([]);
   const navigate = useNavigate();
-  const tools = DUMMY_TOOLS; // Replace with actual state in production
+  useEffect(() => {
+  const fetchUserTools = async () => {
+    try {
+      const res = await getUserTools();
+      console.log("USER TOOLS:", res);
 
+      // depends on your backend response structure
+      setTools(res.data || res); 
+    } catch (error) {
+      console.error("Error fetching user tools:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUserTools();
+}, []);
+  
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-20 px-6 overflow-x-hidden">
       {/* Background Decorative Blobs */}
@@ -113,11 +98,19 @@ export default function ListerInventory() {
                 </div>
 
                 <CustomButton
-                  onClick={() => navigate("/add-tool")}
+                  onClick={() => {
+                    const token = localStorage.getItem("token"); // or whatever you use
+
+                    if (!token) {
+                      navigate("/login"); // 🚨 not logged in
+                    } else {
+                      navigate("/add-tool"); // ✅ allowed
+                    }
+                  }}
                   size="large"
                   sx={{
                     px: 3,
-                    borderRadius: "999px", // pill shape 👀
+                    borderRadius: "999px",
                     letterSpacing: "0.5px",
                   }}
                 >
@@ -187,7 +180,7 @@ export default function ListerInventory() {
                       {/* LEFT: IMAGE */}
                       <div className="w-full md:w-56 lg:w-64 h-52 md:h-full overflow-hidden shrink-0">
                         <img
-                          src={tool.img}
+                          src={tool.image}
                           alt={tool.name}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
@@ -217,13 +210,15 @@ export default function ListerInventory() {
                           <p className="text-3xl font-black text-slate-900 leading-none">
                             ₹{tool.price}
                           </p>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                          {/* <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                             per {tool.unit}
-                          </p>
+                          </p> */}
                         </div>
 
                         <CustomButton
-                       onClick={() => navigate(`/tool/${tool.id}`, { state: tool })}
+                          onClick={() =>
+                            navigate(`/tool/${tool.id}`, { state: tool })
+                          }
                           variantType="success"
                           size="medium"
                           sx={{
@@ -256,13 +251,25 @@ export default function ListerInventory() {
                     Ready to monetize your equipment? Start your first listing
                     and reach farmers across the region.
                   </p>
-                  <Button
-                    variant="contained"
-                    onClick={() => navigate("/add-tool")}
-                    className="bg-emerald-600 hover:bg-emerald-700 px-10 py-4 rounded-2xl font-black shadow-xl normal-case text-lg"
+                  <CustomButton
+                    onClick={() => {
+                      const token = localStorage.getItem("token"); // or whatever you use
+
+                      if (!token) {
+                        navigate("/login"); // 🚨 not logged in
+                      } else {
+                        navigate("/add-tool"); // ✅ allowed
+                      }
+                    }}
+                    size="large"
+                    sx={{
+                      px: 3,
+                      borderRadius: "999px",
+                      letterSpacing: "0.5px",
+                    }}
                   >
-                    + Add Your First Tool
-                  </Button>
+                    ADD YOUR FIRST TOOL'S
+                  </CustomButton>
                 </GlassCard>
               </motion.div>
             )}
