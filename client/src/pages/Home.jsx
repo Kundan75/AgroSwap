@@ -123,11 +123,11 @@ const Home = () => {
             {randomTools
               .map((tool) => (
                 <motion.div
-                  key={tool.id}
+                  key={tool._id}
                   whileHover={{ scale: 1.03 }}
                   className="bg-white/40 backdrop-blur-lg border border-white/50 rounded-2xl p-4 shadow-lg hover:shadow-2xl transition-all cursor-pointer"
                   onClick={() =>
-                    navigate(`/tooldetails/${tool.id}`, { state: tool })
+                    navigate(`/tooldetails/${tool._id}`, { state: tool })
                   }
                 >
                   <img

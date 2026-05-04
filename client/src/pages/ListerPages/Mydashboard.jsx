@@ -36,7 +36,6 @@ const Badge = ({ icon: Icon, label }) => (
 );
 
 
-// const [loading, setLoading] = useState(true);
 
 
 // --- Main Section Component ---
@@ -54,9 +53,10 @@ const [tools, setTools] = useState([]);
       setTools(res.data || res); 
     } catch (error) {
       console.error("Error fetching user tools:", error);
-    } finally {
-      setLoading(false);
     }
+    //  finally {
+    //   setLoading(false);
+    // }
   };
 
   fetchUserTools();
@@ -170,7 +170,7 @@ const [tools, setTools] = useState([]);
               <div className="space-y-6">
                 {tools.map((tool, idx) => (
                   <motion.div
-                    key={tool.id}
+                    key={tool._id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1, duration: 0.5 }}
@@ -217,7 +217,7 @@ const [tools, setTools] = useState([]);
 
                         <CustomButton
                           onClick={() =>
-                            navigate(`/tool/${tool.id}`, { state: tool })
+                            navigate(`/tool/${tool._id}`, { state: tool })
                           }
                           variantType="success"
                           size="medium"

@@ -91,7 +91,7 @@ const ToolCard = ({ tool, navigate }) => (
         <div className="grid grid-cols-2 gap-3">
           <button
             className="py-2 px-4 rounded-xl border border-green-600/30 text-green-700 font-semibold hover:bg-green-600/10 transition-colors"
-            onClick={() => navigate(`/tooldetails/${tool.id}`, { state: tool })}
+            onClick={() => navigate(`/tooldetails/${tool._id}`, { state: tool })}
           >
             Details
           </button>
@@ -133,7 +133,7 @@ export default function ToolsForRent() {
 
   const navigate = useNavigate();
   return (
-    <>
+    
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-sky-50 to-emerald-100 pt-20 pb-12 px-4 md:px-8 overflow-hidden">
         {/* Animated Background Blobs */}
         <div className="fixed inset-0 z-0 pointer-events-none">
@@ -301,6 +301,5 @@ export default function ToolsForRent() {
           </section>
         </div>
       </div>
-    </>
   );
 }

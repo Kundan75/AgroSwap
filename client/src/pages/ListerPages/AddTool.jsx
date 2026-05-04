@@ -94,9 +94,6 @@ export default function AddTool() {
       if (imageFile) {
         formDataToSend.append("image", imageFile); // 🔥 actual upload
       }
-      for (let pair of formDataToSend.entries()) {
-        console.log(pair[0], pair[1]);
-      }
 
       const res = await CreateToolService(formDataToSend);
 

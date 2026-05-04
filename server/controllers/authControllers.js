@@ -39,12 +39,21 @@ export const Signup = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ mobile });
+    const existingMobUser = await User.findOne({ mobile });
+    const existingEmailUser = await User.findOne({ email });
 
-    if (existingUser) {
+
+    if (existingMobUser) {
       return res.status(400).json({
         success: false,
         message: "User already exists with this mobile",
+      });
+    }
+
+     if (existingEmailUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with this email",
       });
     }
 

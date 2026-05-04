@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js"; // ✅ correct path + extension
 import toolRoutes from "./routes/toolRoutes.js"
+import bookingRoutes from "./routes/bookingRoutes.js"
 
 dotenv.config();
 
@@ -20,6 +21,8 @@ const PORT = process.env.PORT || 5000;
 // Routes
 app.use("/auth", authRoutes);
 app.use("/tool", toolRoutes);
+app.use("/booking", bookingRoutes);
+
 
 
 // Test Route

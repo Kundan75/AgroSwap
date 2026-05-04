@@ -1,5 +1,4 @@
 import Tool from "../models/tool.js";
-// import cloudinary from "../utils/cloudinary.js";
 
 export const CreateTool = async (req, res) => {
   try {
